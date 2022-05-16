@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Host", "Farrago.Host\Farrago.Host.csproj", "{08ADC606-4BF1-450F-9173-BC9FF2344620}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Core", "Farrago.Core\Farrago.Core.csproj", "{618C24C3-DF56-44CF-9490-1BAA6CF80C17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Benchmark", "Farrago.Benchmark\Farrago.Benchmark.csproj", "{78F3A784-72BA-4D33-BCDF-556B8425F6D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{08ADC606-4BF1-450F-9173-BC9FF2344620}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08ADC606-4BF1-450F-9173-BC9FF2344620}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08ADC606-4BF1-450F-9173-BC9FF2344620}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08ADC606-4BF1-450F-9173-BC9FF2344620}.Release|Any CPU.Build.0 = Release|Any CPU
+		{618C24C3-DF56-44CF-9490-1BAA6CF80C17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{618C24C3-DF56-44CF-9490-1BAA6CF80C17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{618C24C3-DF56-44CF-9490-1BAA6CF80C17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{618C24C3-DF56-44CF-9490-1BAA6CF80C17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+    farrago:
+      image: registry.logg.coffee/farrago:${TAG}
+      build:
+        context: .
+        dockerfile: Farrago.Host/Dockerfile
+      ports:
+        - "8000-8019:80"
+      environment:
+        ASPNETCORE_ClusterProvider: "Redis"
+        ASPNETCORE_Redis__ConnectionString: "redis:6379"
+        CLUSTER_ID: "farrago-docker"
+        SERVICE_ID: "farrago-docker"
+      depends_on:
+        - redis
+      deploy:
+        replicas: 20
+      restart: unless-stopped
+    redis:
+      image: "redis:alpine"
+      restart: unless-stopped
