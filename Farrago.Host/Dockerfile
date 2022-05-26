@@ -5,13 +5,24 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY . .
+
+COPY ./*.sln ./
+COPY */*.csproj ./
+
+RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
+
 RUN dotnet restore "Farrago.Host/Farrago.Host.csproj"
+
+COPY . ./
+
+RUN dotnet restore "Farrago.Host/Farrago.Host.csproj" --locked-mode
+
 WORKDIR "/src/Farrago.Host"
-RUN dotnet build "Farrago.Host.csproj" -c Release -o /app/build
+
+RUN dotnet build "Farrago.Host.csproj" -c Release -o /app/build --no-restore
 
 FROM build AS publish
-RUN dotnet publish "Farrago.Host.csproj" -c Release -o /app/publish
+RUN dotnet publish "Farrago.Host.csproj" -c Release -o /app/publish --no-restore
 
 FROM base AS final
 WORKDIR /app
