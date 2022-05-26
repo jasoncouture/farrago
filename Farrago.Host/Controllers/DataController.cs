@@ -1,73 +1,14 @@
 using System.Buffers;
-using System.Text;
+using Farrago.Contracts.Commands;
 using Farrago.Core.KeyValueStore;
+using Farrago.Core.KeyValueStore.Commands;
+using Farrago.Core.KeyValueStore.Commands.Blob;
+using Farrago.Core.KeyValueStore.Commands.Processor;
+using Farrago.Core.KeyValueStore.Commands.Shared;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Orleans;
-using YamlDotNet.Core.Tokens;
 
 namespace Farrago.Host.Controllers;
-
-[Route("api/data/text")]
-public class DataTextController : ControllerBase
-{
-    private readonly IClusterClient _clusterClient;
-
-    public DataTextController(IClusterClient clusterClient)
-    {
-        _clusterClient = clusterClient;
-    }
-
-    [HttpPost("")]
-    public async Task<IActionResult> PostTextAsync(
-        [FromForm]string? text,
-        string key,
-        int shard = 0,
-        long? slidingExpiration = null,
-        long? absoluteExpiration = null)
-    {
-        ModelState.ValidateKeyAndShard(key, shard);
-        var absoluteExpirationAsDateTimeOffset = ModelState.ValidateAndConvertAbsoluteExpiration(absoluteExpiration);
-        var slidingExpirationAsTimespan = ModelState.ValidateAndConvertSlidingExpiration(slidingExpiration);
-        var textBytes = EncodeText(text);
-        ModelState.ValidateByteLength(textBytes, nameof(text));
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        var storageGrain = _clusterClient.GetStorageGrain(shard, key);
-        await storageGrain.SetBlobAsync(textBytes, slidingExpirationAsTimespan, absoluteExpirationAsDateTimeOffset);
-        return AcceptedAtAction("GetText", null, new {key, shard});
-    }
-
-    private byte[]? EncodeText(string? text)
-    {
-        if (text == null) return null;
-        if (text.Length == 0) return Array.Empty<byte>();
-        return Encoding.UTF8.GetBytes(text);
-    }
-
-    [HttpGet("")]
-    public async Task<IActionResult> GetTextAsync(string key, int shard = 0)
-    {
-        ModelState.ValidateKeyAndShard(key, shard);
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        var storageGrain = _clusterClient.GetStorageGrain(shard, key);
-        var result = await storageGrain.GetBlobAsync().ConfigureAwait(false);
-
-        if (result == null) return NotFound();
-
-        return Content(Encoding.UTF8.GetString(result), "text/plain", Encoding.UTF8);
-    }
-
-    [HttpDelete("")]
-    public async Task<IActionResult> DeleteTextAsync(string key, int shard = 0)
-    {
-        ModelState.ValidateKeyAndShard(key, shard);
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        var storageGrain = _clusterClient.GetStorageGrain(shard, key);
-
-        await storageGrain.DeleteAsync().ConfigureAwait(false);
-        return NoContent();
-    }
-}
 
 [ApiController]
 [Route("api/data/blob")]
@@ -76,14 +17,11 @@ public class DataBlobController : ControllerBase
     private const long OneKiloByte = 1024;
     private const long OneMegaByte = OneKiloByte * 1024;
     private const long BlobSizeLimit = OneMegaByte * 32;
-    private readonly IClusterClient _clusterClient;
 
 
-    
-
-    public DataBlobController(IClusterClient clusterClient)
+    public DataBlobController(ICommandProcessor commandProcessor)
     {
-        _clusterClient = clusterClient;
+        CommandProcessor = commandProcessor;
     }
 
     [HttpPost("")]
@@ -119,8 +57,6 @@ public class DataBlobController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
         if (file == null) return StatusCode(500, new {error = "Unable to read uploaded data, file object was null."});
 
-        var storageGrain = _clusterClient.GetStorageGrain(shard, key);
-
         static async Task ReadAllBytes(IFormFile formFile, ArraySegment<byte> target,
             CancellationToken cancellationToken)
         {
@@ -137,8 +73,9 @@ public class DataBlobController : ControllerBase
         var buffer = ArrayPool<byte>.Shared.Rent((int) file.Length);
         try
         {
+            var bufferSegment = new ArraySegment<byte>(buffer, 0, (int)file.Length);
             await ReadAllBytes(file, new ArraySegment<byte>(buffer, 0, (int) file.Length), cancellationToken);
-            await storageGrain.SetBlobAsync(buffer, slidingExpirationAsTimespan, absoluteExpirationAsDateTimeOffset).ConfigureAwait(false);
+            await CommandProcessor.ProcessCommand(new SetBlobCommand(key, bufferSegment.ToArray(), shard, slidingExpirationAsTimespan, absoluteExpirationAsDateTimeOffset), cancellationToken);
         }
         finally
         {
@@ -148,43 +85,26 @@ public class DataBlobController : ControllerBase
         return AcceptedAtAction("GetBlob",  null, new {key, shard});
     }
 
+    private ICommandProcessor CommandProcessor { get; }
+
     [HttpGet("")]
-    public async Task<IActionResult> GetBlobAsync(string key, int shard = 0)
+    public async Task<IActionResult> GetBlobAsync(string key, int shard = 0, CancellationToken cancellationToken = default)
     {
         ModelState.ValidateKeyAndShard(key, shard);
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        var storageGrain = _clusterClient.GetStorageGrain(shard, key);
-        var result = await storageGrain.GetBlobAsync().ConfigureAwait(false);
+        var result = await CommandProcessor.ProcessCommand(new GetBlobCommand(key, shard), cancellationToken);
+        if (result is BlobResponse {Data: { }} response)
+            return File(new MemoryStream(response.Data), "application/octet-stream", enableRangeProcessing: false);
 
-        if (result == null) return NotFound();
-
-        return File(new MemoryStream(result), "application/octet-stream", enableRangeProcessing: false);
+        return NotFound();
     }
 
     [HttpDelete("")]
-    public async Task<IActionResult> DeleteBlobAsync(string key, int shard = 0)
+    public async Task<IActionResult> DeleteBlobAsync(string key, int shard = 0, CancellationToken cancellationToken = default)
     {
         ModelState.ValidateKeyAndShard(key, shard);
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        var storageGrain = _clusterClient.GetStorageGrain(shard, key);
-
-        await storageGrain.DeleteAsync().ConfigureAwait(false);
+        await CommandProcessor.ProcessCommand(new DeleteCommand(key, shard), cancellationToken);
         return NoContent();
-    }
-}
-
-public enum StorageType
-{
-    User,
-    System
-}
-
-public static class ClusterClientExtensions
-{
-
-    public static IStorageGrain GetStorageGrain(this IClusterClient clusterClient, int shard, string key,
-        StorageType storageType = StorageType.User)
-    {
-        return clusterClient.GetGrain<IStorageGrain>(shard, $"{storageType:G}:{key}".ToLower());
     }
 }

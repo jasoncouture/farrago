@@ -1,7 +1,18 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using Farrago.Contracts.Commands;
 using Farrago.Core.KeyValueStore;
+using Farrago.Core.KeyValueStore.Commands;
+using Farrago.Core.KeyValueStore.Commands.Batch;
+using Farrago.Core.KeyValueStore.Commands.Batch.Handler;
+using Farrago.Core.KeyValueStore.Commands.Blob;
+using Farrago.Core.KeyValueStore.Commands.Blob.Handler;
+using Farrago.Core.KeyValueStore.Commands.Processor;
+using Farrago.Core.KeyValueStore.Commands.Shared;
+using Farrago.Core.KeyValueStore.Commands.Shared.Handler;
+using Farrago.Core.KeyValueStore.Commands.String;
+using Farrago.Core.KeyValueStore.Commands.String.Handler;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,11 +58,15 @@ public static class HostBuilderExtensions
         });
 
         services.AddTransient<IStorageGrain, StorageGrain>();
-        services.AddTransient<ICommandProcessorGrain, CommandProcessorGrain>();
+        services.AddTransient<ICommandProcessor, CommandProcessor>();
 
-        services.AddSingleton<ITypedFarragoCommandProcessor<GetDataCommand>, GetDataCommandHandler>();
-        services.AddSingleton<ITypedFarragoCommandProcessor<SetDataCommand>, SetDataCommandHandler>();
-        services.AddSingleton<ITypedFarragoCommandProcessor<DeleteDataCommand>, DeleteDataCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<GetBlobCommand>, GetBlobCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<SetBlobCommand>, SetBlobCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<DeleteCommand>, DeleteDataCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<SetStringCommand>, SetStringCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<GetStringCommand>, GetStringCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<ExpireCommand>, ExpireCommandHandler>();
+        services.AddSingleton<ITypedFarragoCommandProcessor<BatchCommand>, BatchCommandHandler>();
     }
 
     private const string DefaultClusterId = "farrago-cluster";
@@ -79,8 +94,6 @@ public static class HostBuilderExtensions
             o.BasePath = _dashboardOptions.BasePath;
             o.HostSelf = _dashboardOptions.HostSelf;
         });
-
-        siloBuilder.AddMemoryGrainStorage("KeyValueStorage", o => o.NumStorageGrains = 16384);
     }
 
     private static void ConfigureClusteringMethod(HostBuilderContext hostBuilderContext, ISiloBuilder siloBuilder)

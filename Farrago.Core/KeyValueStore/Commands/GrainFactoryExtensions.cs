@@ -1,6 +1,7 @@
+using Farrago.Contracts.Commands;
 using Orleans;
 
-namespace Farrago.Core.KeyValueStore;
+namespace Farrago.Core.KeyValueStore.Commands;
 
 public static class GrainFactoryExtensions
 {

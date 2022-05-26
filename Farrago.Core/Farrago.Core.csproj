@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+     <PackageReference Include="MessagePack" Version="2.3.85" />
+     <PackageReference Include="MessagePack.Annotations" Version="2.3.85" />
      <PackageReference Include="Microsoft.Orleans.Client" Version="3.6.2" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AdoNet" Version="3.6.2" />
     <PackageReference Include="Microsoft.Orleans.CodeGenerator.MSBuild" Version="3.6.2">
@@ -19,6 +21,9 @@
     <PackageReference Include="Orleans.Clustering.Kubernetes" Version="2.1.0" />
     <PackageReference Include="Orleans.Clustering.Redis" Version="3.2.2" />
     <PackageReference Include="OrleansDashboard" Version="3.6.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Farrago.Contracts\Farrago.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

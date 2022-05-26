@@ -4,10 +4,10 @@ namespace Farrago.Core.KeyValueStore;
 
 public interface IStorageGrain : IGrainWithIntegerCompoundKey
 {
-    Task SetBlobAsync(byte[]? data, TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration);
+    Task SetStoredValueAsync(IStoredValue storedValue, TimeSpan? slidingExpiration = null,
+        DateTimeOffset? absoluteExpiration = null);
     Task ExpireAsync(TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration);
-    Task<byte[]?> GetBlobAsync();
-    Task<(byte[]?, DateTimeOffset?)> GetGrainWithNextExpirationAsync();
+    Task<(IStoredValue?, DateTimeOffset?)> GetStoredValueAndNextExpiration();
     Task DeleteAsync();
     Task<DateTimeOffset?> CheckExpirationAsync();
 }

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Farrago.Core\Farrago.Core.csproj" />
+    <ProjectReference Include="..\Farrago.Protocol.Tcp.Server\Farrago.Protocol.Tcp.Server.csproj" />
   </ItemGroup>
   
   <PropertyGroup>

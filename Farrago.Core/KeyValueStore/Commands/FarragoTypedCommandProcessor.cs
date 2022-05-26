@@ -1,6 +1,7 @@
+using Farrago.Contracts.Commands;
 using Orleans;
 
-namespace Farrago.Core.KeyValueStore;
+namespace Farrago.Core.KeyValueStore.Commands;
 
 public abstract class FarragoTypedCommandProcessor<T> : ITypedFarragoCommandProcessor<T> where T : IFarragoCommand
 {

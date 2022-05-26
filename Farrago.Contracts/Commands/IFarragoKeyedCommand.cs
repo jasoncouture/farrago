@@ -1,4 +1,4 @@
-namespace Farrago.Core.KeyValueStore;
+namespace Farrago.Contracts.Commands;
 
 public interface IFarragoKeyedCommand : IFarragoCommand
 {

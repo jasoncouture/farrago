@@ -9,6 +9,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Core", "Farrago.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Benchmark", "Farrago.Benchmark\Farrago.Benchmark.csproj", "{78F3A784-72BA-4D33-BCDF-556B8425F6D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Contracts", "Farrago.Contracts\Farrago.Contracts.csproj", "{382E9D52-FE89-42DF-83A7-2011C768D16F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Protocol.Tcp", "Farrago.Protocol.Tcp\Farrago.Protocol.Tcp.csproj", "{003B5AF2-D62D-49C3-B471-7B67660F409C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farrago.Protocol.Tcp.Server", "Farrago.Protocol.Tcp.Server\Farrago.Protocol.Tcp.Server.csproj", "{D3645140-9A9E-42BA-BD60-D9029D42A9F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +36,17 @@ Global
 		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78F3A784-72BA-4D33-BCDF-556B8425F6D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{382E9D52-FE89-42DF-83A7-2011C768D16F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{382E9D52-FE89-42DF-83A7-2011C768D16F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{382E9D52-FE89-42DF-83A7-2011C768D16F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{382E9D52-FE89-42DF-83A7-2011C768D16F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{003B5AF2-D62D-49C3-B471-7B67660F409C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{003B5AF2-D62D-49C3-B471-7B67660F409C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{003B5AF2-D62D-49C3-B471-7B67660F409C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{003B5AF2-D62D-49C3-B471-7B67660F409C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3645140-9A9E-42BA-BD60-D9029D42A9F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3645140-9A9E-42BA-BD60-D9029D42A9F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3645140-9A9E-42BA-BD60-D9029D42A9F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3645140-9A9E-42BA-BD60-D9029D42A9F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,25 +1,19 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Concurrency;
-using Orleans.Core;
 using Orleans.Placement;
-using Orleans.Providers;
-using Orleans.Runtime;
-using Orleans.Storage;
 
 namespace Farrago.Core.KeyValueStore;
 
 [ActivationCountBasedPlacement]
-[StorageProvider(ProviderName = "KeyValueStorage")]
-public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter
+public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter, IDisposable
 {
     private readonly ILogger<StorageGrain> _logger;
     private long _shard;
     private string _key = string.Empty;
     private DateTimeOffset _lastActivity = DateTimeOffset.Now;
-    private bool _skipExpirationUpdate = false;
-    private IDisposable? _timerHandle = null;
+    private bool _skipExpirationUpdate;
+    private IDisposable? _timerHandle;
     private readonly StoredDataContainer _state = new();
 
     public StorageGrain(ILogger<StorageGrain> logger)
@@ -67,13 +61,13 @@ public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter
 
 
     [OneWay]
-    public Task SetBlobAsync(byte[]? data, TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration)
+    public Task SetStoredValueAsync(IStoredValue storedValue, TimeSpan? slidingExpiration = null,
+        DateTimeOffset? absoluteExpiration = null)
     {
-        if (data == null) return DeleteAsync();
-        _state.StoredData = new StoredData(data, slidingExpiration, absoluteExpiration);
+        _state.StoredData = new StoredData(storedValue, slidingExpiration, absoluteExpiration);
         return Task.CompletedTask;
     }
-    
+
     [OneWay]
     public Task ExpireAsync(TimeSpan? slidingExpiration, DateTimeOffset? absoluteExpiration)
     {
@@ -86,26 +80,18 @@ public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter
         return Task.CompletedTask;
     }
 
-    private static readonly Task<byte[]?> NullDataTask = Task.FromResult<byte[]?>(null);
-
-    public Task<byte[]?> GetBlobAsync()
+    public Task<IStoredValue?> GetStoredValueAsync()
     {
-        if (_state.StoredData is null or {Data: null})
-        {
-            _state.StoredData = null;
-            return NullDataTask;
-        }
-
-        return Task.FromResult<byte[]?>(_state.StoredData.Data);
+        if (_state.StoredData?.StoredValue is { }) return Task.FromResult<IStoredValue?>(_state.StoredData.StoredValue);
+        return NullDataTask;
     }
 
-    public async Task<(byte[]?, DateTimeOffset?)> GetGrainWithNextExpirationAsync()
+    public async Task<(IStoredValue?, DateTimeOffset?)> GetStoredValueAndNextExpiration()
     {
-        var blob = await GetBlobAsync();
-        if (blob == null) return (null, null);
-        var currentRawTimestamp = GetExpirationTimestamp(_state.StoredData, _lastActivity);
-        return (blob, currentRawTimestamp == DateTimeOffset.UnixEpoch ? null : currentRawTimestamp);
+        return (await GetStoredValueAsync(), GetExpirationTimestamp(_state.StoredData, _lastActivity));
     }
+
+    private static readonly Task<IStoredValue?> NullDataTask = Task.FromResult<IStoredValue?>(null);
 
     [OneWay]
     public Task DeleteAsync()
@@ -139,7 +125,7 @@ public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter
             _lastActivity = DateTimeOffset.Now;
         }
 
-        if (_state.StoredData is null or {Data: null})
+        if (_state.StoredData is null or {StoredValue: null})
         {
             _state.StoredData = null;
         }
@@ -155,7 +141,7 @@ public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter
         }
     }
 
-    private bool IsExpired() => _state.StoredData is null or { Data: null } || GetExpirationTimestamp(_state.StoredData, _lastActivity) <= DateTimeOffset.Now;
+    private bool IsExpired() => _state.StoredData is null or { StoredValue: null } || GetExpirationTimestamp(_state.StoredData, _lastActivity) <= DateTimeOffset.Now;
 
     private static DateTimeOffset GetExpirationTimestamp(StoredData? storedData, DateTimeOffset lastActivity)
     {
@@ -178,5 +164,11 @@ public class StorageGrain : Grain, IStorageGrain, IIncomingGrainCallFilter
                 _key, _shard);
             DelayDeactivation(timeUntilExpired);
         }
+    }
+
+    public void Dispose()
+    {
+        _timerHandle?.Dispose();
+        _timerHandle = null;
     }
 }

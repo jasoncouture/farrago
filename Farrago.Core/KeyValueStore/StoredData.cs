@@ -1,6 +1,6 @@
 namespace Farrago.Core.KeyValueStore;
 
-public record StoredData(byte[]? Data, TimeSpan? SlidingExpiration,
+public record StoredData(IStoredValue? StoredValue, TimeSpan? SlidingExpiration,
     DateTimeOffset? AbsoluteExpiration)
 {
 }
